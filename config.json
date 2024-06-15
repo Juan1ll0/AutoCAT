@@ -1,4 +1,20 @@
 {
-    doses: 2,
-    hours: ["8:00", "14:00", "20:00"]
+    "scheduled": [
+        {
+            "name": "Desayuno",
+            "doses": 3,
+            "time": "06:00"
+        }, 
+        {
+            "name": "Comida",
+            "doses": 1,
+            "time": "13:00"
+        },
+        {
+            "name": "Cena",
+            "doses": 2,
+            "time": "19:00"
+        },
+        
+    ]
 }

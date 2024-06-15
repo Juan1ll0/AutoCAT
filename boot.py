@@ -1,5 +1,7 @@
 # boot.py -- run on boot-up
 import network
+import ntptime
+import os, time
 # import gc
 from libs.fs import ReadJsonFile
 
@@ -23,3 +25,6 @@ def do_connect():
 print("Connecting to your wifi...")
 do_connect()
 # gc.collect()
+
+# Set time
+ntptime.settime()
