@@ -9,9 +9,10 @@ def get_local_time():
     
 
 class Event:
-    def __init__(self, name, time, callback):
+    def __init__(self, name, time, quantity, callback):
         self.name = name
         self.atTime = time
+        self.quantity = quantity
         self.callback = callback
     
     def getTime(self):
@@ -21,7 +22,7 @@ class Event:
 
     def run(self):
         print("Running...",self.name)
-        self.callback()
+        self.callback(self.quantity)
 
 class Scheduler:
     def __init__(self, every=60):
@@ -51,9 +52,7 @@ class Scheduler:
                 return eventTime
         
     def getAllEvents(self):
-        for event in self.events:
-            print("Name:",event.name)
-            print("Time:",event.atTime)
+        return self.events
             
     def checkEvents(self):
         localtime = get_local_time()

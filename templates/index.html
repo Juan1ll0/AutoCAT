@@ -1,13 +1,31 @@
-{% args %}
+{% args hours %}
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Automatic Cats Feeder</title>
+        <title>aCats Feeder</title>
+        <link rel="stylesheet" href="static/css/index.css" />
+        <script src="static/js/index.js"></script>
     </head>
     <body>
-        <h1>My First Heading</h1>
-        <p>My first paragraph.</p>
+        <h1>aCats Feeder</h1>
+        <form onsubmit="submitForm(event)">
+            <h2>Agenda</h2>
+            <ul class="scheduler">
+            {% for hour in hours %}
+                <li>
+                <input name="meal" type="text" value="{{ hour.name }}" />
+                <input name="time" type="time" value="{{ hour.atTime }}" />
+                <input name="quantity" type="number" value="{{ hour.quantity }}" /></li>
+            {% endfor %}
+            </ul>
+            <button class="submit button button-primary" onclick="submit">Guardar</button>
+        </form>
+        <div class="actions">
+            <div class="button-wrap">
+                <a href="#" class="button button-circle button-action" onclick="serveFeed()">Servir comida</a>
+            </div>
+        </div>
     </body>
 </html>

@@ -1,4 +1,4 @@
-from lib.fs import ReadJsonFile
+from lib.fs import ReadJsonFile, WriteJsonFile
 
 
 class Subscriber:
@@ -18,10 +18,11 @@ class Config:
     def addSubscriber(self, callback):
         self.Subscribers.append(callback)
         
-    def writeConfig(self):
+    def writeConfig(self, data):
         print("writting config...")
-        for sub in self.Subscribers:
-            sub.run()
+        WriteJsonFile(self.Filename, data)
+        # for sub in self.Subscribers:
+        #    sub.run()
         
     def loadConfig(self):
         print("reading config...", self.Filename)

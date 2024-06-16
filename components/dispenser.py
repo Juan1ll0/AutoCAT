@@ -6,6 +6,6 @@ class Dispenser:
         
         
     def dispense(self, quantity):
+        print("Serving feed...", quantity)
         for i in range(quantity):
-            print("Dispense", i)
             self.servo.move()
