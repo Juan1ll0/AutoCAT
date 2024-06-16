@@ -1,4 +1,4 @@
-from libs.fs import ReadJsonFile
+from lib.fs import ReadJsonFile
 
 
 class Subscriber:

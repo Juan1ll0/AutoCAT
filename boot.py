@@ -3,7 +3,7 @@ import network
 import ntptime
 import os, time
 # import gc
-from libs.fs import ReadJsonFile
+from lib.fs import ReadJsonFile
 
 
 # Load config from config file Wifi credentials

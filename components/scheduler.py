@@ -1,4 +1,5 @@
 import time
+import asyncio
 
 def get_local_time():
     now = time.localtime()
@@ -60,14 +61,9 @@ class Scheduler:
         for event in self.events:
             if event.getTime() == localtime:
                 event.run()
-            
+                
     def run(self):
+        print('Starting robot...')
         while True:
             self.checkEvents()
-            time.sleep(self.every),
-    
-            
-            
-        
-        
-        
+            yield from asyncio.sleep(self.every)
