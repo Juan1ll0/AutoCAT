@@ -1,11 +1,13 @@
 import uasyncio as asyncio
 from components.servo import Servo
+from components.weight import Weight
 from components.dispenser import Dispenser
 from components.scheduler import Scheduler, Event
 from components.config import Config
-# from microdot import Microdot, Request, Response, abort, redirect, send_file  # noqa: F401
+from microdot import Microdot, Request, Response, abort, redirect, send_file  # noqa: F401
 from lib.microdot import Microdot, Request, Response, abort, redirect, send_file
 from lib.microdot_utemplate import Template
+
 import json
 
 app = Microdot()
@@ -31,7 +33,8 @@ config = Config("config.json")
 config.loadConfig()
 
 servo = Servo(6)
-dispenser = Dispenser(servo)
+weight = Weight(10,8)
+dispenser = Dispenser(servo, weight)
 scheduler = Scheduler(10)
 
 loadEventsFromConfig(scheduler, config.getConfig("scheduled"), dispenser)

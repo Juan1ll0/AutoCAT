@@ -1,0 +1,105 @@
+from machine import I2C, Pin
+import time
+
+class NAU7802:
+    # Constants
+    NAU7802_ADDRESS = 0x2A
+
+    NAU7802_PU_CTRL = 0x00
+    NAU7802_CTRL1 = 0x01
+    NAU7802_CTRL2 = 0x02
+    NAU7802_ADCO_B2 = 0x12
+    NAU7802_ADCO_B1 = 0x13
+    NAU7802_ADCO_B0 = 0x14
+    NAU7802_ADC = 0x15
+
+    NAU7802_PU_CTRL_AVDDS = 1 << 7
+    NAU7802_PU_CTRL_OSCS = 1 << 6
+    NAU7802_PU_CTRL_CS = 1 << 4
+    NAU7802_PU_CTRL_CR = 1 << 3
+    NAU7802_PU_CTRL_PUD = 1 << 2
+    NAU7802_PU_CTRL_PUA = 1 << 1
+    NAU7802_PU_CTRL_RR = 1 << 0
+
+    def __init__(self, i2c, address=NAU7802_ADDRESS):
+        self.i2c = i2c
+        self.address = address
+        self.debug = True
+
+    def begin(self):
+        self.reset()
+        time.sleep(0.1)
+        if not self.available():
+            if self.debug:
+                print("Sensor not available after reset.")
+            return False
+        self.power_up()
+        self.set_ldo(0b111)  # Set LDO to 4.5V
+        self.set_gain(0b111)  # Set gain to max
+        self.set_conversion_rate(0b10)  # Set conversion rate to 10 SPS
+        if not self.calibrate_afe():
+            if self.debug:
+                print("AFE calibration failed.")
+            return False
+        return True
+
+    def write_register(self, reg, value):
+        self.i2c.writeto_mem(self.address, reg, bytes([value]))
+        if self.debug:
+            print(f"Write 0x{value:02X} to register 0x{reg:02X}")
+
+    def read_register(self, reg):
+        result = self.i2c.readfrom_mem(self.address, reg, 1)[0]
+        if self.debug:
+            print(f"Read 0x{result:02X} from register 0x{reg:02X}")
+        return result
+
+    def reset(self):
+        self.write_register(self.NAU7802_PU_CTRL, self.NAU7802_PU_CTRL_RR)
+        time.sleep(0.1)  # Delay for reset
+        self.write_register(self.NAU7802_PU_CTRL, 0x00)  # Clear reset bit
+
+    def available(self):
+        pu_ctrl = self.read_register(self.NAU7802_PU_CTRL)
+        return (pu_ctrl & self.NAU7802_PU_CTRL_AVDDS) != 0
+
+    def power_up(self):
+        pu_ctrl = self.read_register(self.NAU7802_PU_CTRL)
+        self.write_register(self.NAU7802_PU_CTRL, pu_ctrl | self.NAU7802_PU_CTRL_PUA | self.NAU7802_PU_CTRL_PUD)
+        time.sleep(0.1)
+        pu_ctrl = self.read_register(self.NAU7802_PU_CTRL)
+        if self.debug:
+            print(f"PU_CTRL after power up: 0x{pu_ctrl:02X}")
+
+    def set_ldo(self, ldo_value):
+        ctrl1 = self.read_register(self.NAU7802_CTRL1)
+        ctrl1 = (ctrl1 & 0x8F) | (ldo_value << 4)
+        self.write_register(self.NAU7802_CTRL1, ctrl1)
+
+    def set_gain(self, gain_value):
+        ctrl1 = self.read_register(self.NAU7802_CTRL1)
+        ctrl1 = (ctrl1 & 0xF8) | gain_value
+        self.write_register(self.NAU7802_CTRL1, ctrl1)
+
+    def set_conversion_rate(self, rate):
+        ctrl2 = self.read_register(self.NAU7802_CTRL2)
+        ctrl2 = (ctrl2 & 0xF8) | rate
+        self.write_register(self.NAU7802_CTRL2, ctrl2)
+
+    def calibrate_afe(self):
+        self.write_register(self.NAU7802_CTRL2, self.read_register(self.NAU7802_CTRL2) | 0x02)
+        time.sleep(0.1)
+        for _ in range(100):
+            if (self.read_register(self.NAU7802_CTRL2) & 0x02) == 0:
+                return True
+            time.sleep(0.01)
+        return False
+
+    def read_adc(self):
+        adco_b2 = self.read_register(self.NAU7802_ADCO_B2)
+        adco_b1 = self.read_register(self.NAU7802_ADCO_B1)
+        adco_b0 = self.read_register(self.NAU7802_ADCO_B0)
+        value = (adco_b2 << 16) | (adco_b1 << 8) | adco_b0
+        if value & 0x800000:
+            value -= 1 << 24  # Convert to signed
+        return value
