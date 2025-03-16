@@ -3,7 +3,6 @@ from components.servo import Servo
 from components.dispenser import Dispenser
 from components.scheduler import Scheduler, Event
 from components.config import Config
-# from microdot import Microdot, Request, Response, abort, redirect, send_file  # noqa: F401
 from lib.microdot import Microdot, Request, Response, abort, redirect, send_file
 from lib.microdot_utemplate import Template
 import json
@@ -32,7 +31,7 @@ config.loadConfig()
 
 servo = Servo(6)
 dispenser = Dispenser(servo)
-scheduler = Scheduler(10)
+scheduler = Scheduler(60)
 
 loadEventsFromConfig(scheduler, config.getConfig("scheduled"), dispenser)
 scheduler.getNextEvent()
@@ -79,11 +78,13 @@ def static(request, path):
     return send_file('static/'+path)
 
 
+# app.run(debug=True)
+
 async def main():
     robot_task = asyncio.create_task(scheduler.run())
     server_task = asyncio.create_task(app.run(debug=True))
     
     # Wait for both tasks to complete (they won't, but this keeps them running)
-    await asyncio.gather(robot_task, server_task)
+    await asyncio.gather(server_task,robot_task)
 
 asyncio.run(main())

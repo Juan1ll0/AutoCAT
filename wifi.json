@@ -1,4 +1,10 @@
 {
-    "ssid": "ssid",
-    "passwd": "passwd"
+    "ssid": "your-ssid",
+    "passwd": "your-password",
+    "config": {
+        "static_ip": "your-private-network-ip",
+        "subnet_mask": "your-private-network-masl",
+        "gateway": "gateway-ip",
+        "dns": "your-dns"
+    }
 }

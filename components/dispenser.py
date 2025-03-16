@@ -1,5 +1,3 @@
-import machine
-
 class Dispenser:
     def __init__(self, servo):
         self.servo = servo
