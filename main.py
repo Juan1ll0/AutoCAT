@@ -26,14 +26,17 @@ def loadEventsFromConfig(scheduler, events, dispenser):
                          # lambda cb=callback: cb())
         scheduler.addEvent(newEvent)
                                        
-config = Config("config.json")
-config.loadConfig()
+config = ReadJsonFile("config.json")
 
-servo = Servo(6)
+schedulerConfig = Config("scheduler.json")
+schedulerConfig.loadConfig()
+
+servo_cfg = config.get("servo");
+servo = Servo(servo_cfg['pin'], servo_cfg['angle'])
 dispenser = Dispenser(servo)
 scheduler = Scheduler(60)
 
-loadEventsFromConfig(scheduler, config.getConfig("scheduled"), dispenser)
+loadEventsFromConfig(scheduler, schedulerConfig.getConfig(), dispenser)
 scheduler.getNextEvent()
 
 @app.get('/')
@@ -54,7 +57,9 @@ async def setScheduler(request):
     try:
         # Parse the incoming JSON data
         body = request.json
-        config.writeConfig(body)
+        schedulerConfig.writeConfig(body)
+        loadEventsFromConfig(scheduler, body, dispenser)
+        scheduler.getNextEvent()
         return Response(
             body=json.dumps({
                 'status': 'success',

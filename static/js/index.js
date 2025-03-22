@@ -28,9 +28,7 @@ function convertUtcToLocalTime(utcTimeStr) {
 
         // Collect form data
         const form = event.target;
-        const data = {
-            scheduled: []
-        };
+        const data = [];
 
         const nameInputs = form.querySelectorAll('input[name="meal"]');
         const timeInputs = form.querySelectorAll('input[name="time"]');
@@ -42,7 +40,7 @@ function convertUtcToLocalTime(utcTimeStr) {
                 time: timeInputs[i].value,
                 quantity: parseInt(quantityInputs[i].value,10)
             };
-            data.scheduled.push(hour);
+            data.push(hour);
         }
 
         // Send data as JSON

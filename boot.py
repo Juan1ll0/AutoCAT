@@ -7,20 +7,21 @@ from lib.fs import ReadJsonFile
 
 
 # Load config from config file Wifi credentials
-networkConfig = ReadJsonFile("wifi.json")
-ssid = networkConfig.get("ssid")
-password = networkConfig.get("passwd")
-config = networkConfig.get("config")
+config = ReadJsonFile("config.json")
+networkConfig = config.get("network")
 
+ssid = networkConfig["ssid"]
+password = networkConfig["passwd"]
+static_config = networkConfig["config"]
 def do_connect():
     sta_if = network.WLAN(network.STA_IF)
     if not sta_if.isconnected():
         print('connecting to network...')
         sta_if.active(True)
         
-        if config and all(k in config for k in ["static_ip", "subnet_mask", "gateway", "dns"]):
+        if static_config and all(k in static_config for k in ["static_ip", "subnet_mask", "gateway", "dns"]):
             print("Applying static IP configuration...")
-            sta_if.ifconfig((config['static_ip'], config['subnet_mask'], config['gateway'], config['dns']))
+            sta_if.ifconfig((static_config['static_ip'], static_config['subnet_mask'], static_config['gateway'], static_config['dns']))
         else:
             print("No static IP configuration found, using DHCP.")
 

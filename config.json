@@ -1,20 +1,16 @@
 {
-    "scheduled": [
-        {
-            "name": "Desayuno",
-            "quantity": 3,
-            "time": "09:55"
-        }, 
-        {
-            "name": "Comida",
-            "quantity": 1,
-            "time": "13:00"
-        },
-        {
-            "name": "Cena",
-            "quantity": 2,
-            "time": "19:00"
-        },
-        
-    ]
+    "servo": {
+        "pin": 5,
+        "angle": 270,
+    },
+    "network": {
+        "ssid": "your-ssid",
+        "passwd": "your-password",
+        "config": {
+            "static_ip": "your-private-network-ip",
+            "subnet_mask": "your-private-network-masl",
+            "gateway": "gateway-ip",
+            "dns": "your-dns"
+        }
+    }
 }

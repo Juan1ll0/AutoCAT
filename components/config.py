@@ -12,7 +12,7 @@ class Subscriber:
 class Config:
     def __init__(self, filename):
         self.Filename = filename
-        self.Subscribers = [Subscriber("default", print("Config change..."))]
+        self.Subscribers = [Subscriber("default", print("Scheduler change..."))]
         self.Config = ""
         
     def addSubscriber(self, callback):
@@ -21,12 +21,13 @@ class Config:
     def writeConfig(self, data):
         print("writting config...")
         WriteJsonFile(self.Filename, data)
-        # for sub in self.Subscribers:
-        #    sub.run()
         
     def loadConfig(self):
         print("reading config...", self.Filename)
         self.Config = ReadJsonFile(self.Filename)
         
-    def getConfig(self, prop):
+    def getConfig(self):
+        return self.Config
+    
+    def getConfigProp(self, prop):
         return self.Config.get(prop)
