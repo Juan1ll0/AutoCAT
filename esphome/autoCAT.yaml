@@ -34,6 +34,27 @@ wifi:
     ssid: "Autocat Fallback Hotspot"
     password: "pJXy1EEFVl2Q"
 
+globals:
+  - id: minute_counter
+    type: int
+    restore_value: no
+    initial_value: '0'
+  
+  - id: is_empty
+    type: bool
+    restore_value: yes
+    initial_value: false
+  
+  - id: feed_blocked
+    type: bool
+    restore_value: yes
+    initial_value: false
+  
+  - id: empty_attempt_counter
+    type: int
+    restore_value: no
+    initial_value: '0'
+
 servo:
   - id: impeller_servo
     output: gpio_6
@@ -88,6 +109,17 @@ number:
     initial_value: 5
     optimistic: true
 
+  # Max retries to throw empty event
+  - platform: template
+    name: "Empty Attempt Counter"
+    id: max_empty_attempts
+    min_value: 1
+    max_value: 10
+    step: 1
+    restore_value: true
+    optimistic: false
+    initial_value: 5
+
 
 # Serve Button
 button:
@@ -102,6 +134,16 @@ button:
         - delay: 2s
         - component.update: feed_weight
 
+  - platform: template
+    name: "Unlock"
+    on_press:
+      then:
+        - lambda: |-
+            id(feed_blocked) = false;
+            id(is_empty) = false;
+            id(empty_attempt_counter) = 0;
+        - logger.log: "Feed block reset."
+
 # Script seed
 script:
   - id: serve_feed
@@ -110,7 +152,7 @@ script:
       - logger.log: "Start serving feed..."
       - while:
           condition:
-            lambda: 'return id(feed_weight).state < id(min_weight).state;'
+            lambda: 'return id(feed_weight).state < id(min_weight).state && !id(is_empty);'
           then:
             - logger.log: "Serving..."
             - lambda: |-
@@ -119,6 +161,20 @@ script:
                 id(servo_control).make_call().set_value(target_value).perform();
             - delay: 4s
             - component.update: feed_weight
+            - lambda: |-
+                static float last_weight = 0;
+                if (abs(id(feed_weight).state - last_weight) < 0.01) {
+                  id(empty_attempt_counter)++;
+                } else {
+                  id(empty_attempt_counter) = 0;
+                }
+                last_weight = id(feed_weight).state;
+
+                if (id(empty_attempt_counter) >= int(id(max_empty_attempts).state)) {
+                  id(is_empty) = true;
+                  id(feed_blocked) = true;
+                  ESP_LOGI("serve_feed", "Feeder is empty. Blocking further attempts.");
+                }
 
 sensor:
   - platform: hx711
@@ -135,15 +191,32 @@ sensor:
           - 27200 -> 0  # Min. value readed with zero weight.
           - 893600 -> 1 # Max. value readed with full weight.
 
+  - platform: template
+    name: "Minutos contados"
+    lambda: 'return id(minute_counter);'
+    update_interval: 1min
+
+binary_sensor:
+  - platform: template
+    name: "Feeder Empty"
+    lambda: |-
+      return id(is_empty);
+    update_interval: 1min
+
+  - platform: template
+    name: "Feeder Locked"
+    lambda: |-
+      return id(feed_blocked);
+    update_interval: 1min
+
 # loop every minute, needed for dinamic change interval.
 interval:
   - interval: 1min
     then:
       - lambda: |-
-          static int minute_counter = 0;
-          minute_counter++;
-          if (minute_counter >= int(id(read_interval).state)) {
-            minute_counter = 0;
+          id(minute_counter) += 1;
+          if (id(minute_counter) >= int(id(read_interval).state)) {
+            id(minute_counter) = 0;
             id(feed_weight).update();
             ESP_LOGI("interval", "Checking weight after %d minutes, weight %.2f", int(id(read_interval).state), id(feed_weight).state);
             if (id(feed_weight).state < id(min_weight).state) {
